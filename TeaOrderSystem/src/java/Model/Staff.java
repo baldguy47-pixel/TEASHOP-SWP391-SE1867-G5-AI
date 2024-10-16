@@ -1,12 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Model;
 
+import DAO.OrderDAO;
 import java.util.Date;
 
-public class User {
+public class Staff {
 
     private int id;
     private String email;
@@ -15,20 +12,11 @@ public class User {
     private String gender;
     private String address;
     private String phone;
+    private int role;
     private boolean isDeleted;
     private Date createdAt;
     private int createdBy;
     private String avatar;
-    private String changeHistory;
-    private String location;
-
-    public String getChangeHistory() {
-        return changeHistory;
-    }
-
-    public void setChangeHistory(String changeHistory) {
-        this.changeHistory = changeHistory;
-    }
 
     public int getId() {
         return id;
@@ -86,6 +74,14 @@ public class User {
         this.phone = phone;
     }
 
+    public int getRole() {
+        return role;
+    }
+
+    public void setRole(int role) {
+        this.role = role;
+    }
+
     public boolean isIsDeleted() {
         return isDeleted;
     }
@@ -118,28 +114,55 @@ public class User {
         this.avatar = avatar;
     }
 
-    public String getLocation() {
-        return location;
+    private int saleNumberOrder = -1;
+    public int saleNumberOrder() {
+        if (saleNumberOrder == -1) {
+            saleNumberOrder = 0;
+            OrderDAO dao = new OrderDAO();
+
+            saleNumberOrder += dao.getOrdersByStatus("Submitted", id).size();
+            saleNumberOrder += dao.getOrdersByStatus("Approved", id).size();
+            saleNumberOrder += dao.getOrdersByStatus("Request cancel", id).size();
+            saleNumberOrder += dao.getOrdersByStatus("Packaging", id).size();
+            saleNumberOrder += dao.getOrdersByStatus("Delivering", id).size();
+            saleNumberOrder += dao.getOrdersByStatus("Success", id).size();
+        }
+        
+        return saleNumberOrder;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setRoleInt(String role) {
+        if (role == "Admin") {
+            this.role = 1;
+        }
+        if (role == "Marketing") {
+            this.role = 2;
+        }
+        if (role == "Sale") {
+            this.role = 3;
+        }
+        if (role == "Sale leader") {
+            this.role = 4;
+        }
+        if (role == "User") {
+            this.role = 5;
+        }
     }
-    
-    
-    
-    public String toString(Staff staff) {
-        String time = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm dd-MM-yyyy"));
-        return "<tr>"
-                + "<td><strong>" + time + "</strong></td>"
-                + "<td>" + email + "</td>"
-                + "<td>" + fullname + "</td>"
-                + "<td>" + gender + "</td>"
-                + "<td>" + address + "</td>"
-                + "<td>" + phone + "</td>"
-                + "<td> Updated by: " + staff.getFullname() + "</td>"
-                + "</tr>";
+
+    public String getRoleString() {
+        if (this.role == 1) {
+            return "Admin";
+        }
+        if (this.role == 2) {
+            return "Marketing";
+        }
+        if (this.role == 3) {
+            return "Sale";
+        }
+        if (this.role == 4) {
+            return "Sale leader";
+        }
+        return "User";
     }
 
 }
-
