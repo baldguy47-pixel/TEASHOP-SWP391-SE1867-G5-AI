@@ -1,51 +1,139 @@
+package Model;
+
+import DAO.OrderDAO;
+import DAO.StaffDAO;
+import DAO.ToppingDAO;
+import DAO.UserDAO;
+import java.util.Calendar;
+import java.util.Date;
+
 public class Order {
-    private int orderId;
-    private int customerId;
-    private Date orderDate;
-    private double totalAmount;
+
+    private int id;
+    private int userId;
+    private String fullname;
+    private String address;
+    private String phone;
     private String status;
+    private boolean isDeleted;
+    private Date createdAt;
+    private int createdBy;
+    private double totalCost;
+    private String notes;
+    private String paymentMethod;
+     private String location;
 
-    public Order() {}
+    private User user;
 
-    public Order(int orderId, int customerId, Date orderDate, double totalAmount, String status) {
-        this.orderId = orderId;
-        this.customerId = customerId;
-        this.orderDate = orderDate;
-        this.totalAmount = totalAmount;
+    public Order() {
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public Order(int id, int userId, String fullname, String address, String phone, String status, boolean isDeleted, Date createdAt, int createdBy) {
+        this.id = id;
+        this.userId = userId;
+        this.fullname = fullname;
+        this.address = address;
+        this.phone = phone;
         this.status = status;
+        this.isDeleted = isDeleted;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.totalCost = new OrderDAO().getTotal(id);
+        
     }
 
-    // Getters and Setters
-    public int getOrderId() {
-        return orderId;
+    public String getPaymentMethod() {
+        return paymentMethod;
     }
 
-    public void setOrderId(int orderId) {
-        this.orderId = orderId;
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 
-    public int getCustomerId() {
-        return customerId;
+    
+    public double getTotalCost() {
+        return totalCost;
     }
 
-    public void setCustomerId(int customerId) {
-        this.customerId = customerId;
+    public void setTotalCost(double totalCost) {
+        this.totalCost = totalCost;
     }
 
-    public Date getOrderDate() {
-        return orderDate;
+    public String getNotes() {
+        return notes;
     }
 
-    public void setOrderDate(Date orderDate) {
-        this.orderDate = orderDate;
+    public boolean isExpired() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(createdAt);
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        // Get the new date
+        Date expiredDate = calendar.getTime();
+        return new Date().after(expiredDate);
     }
 
-    public double getTotalAmount() {
-        return totalAmount;
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
-    public void setTotalAmount(double totalAmount) {
-        this.totalAmount = totalAmount;
+    public String getGender(String email) {
+        return new UserDAO().getUserByEmail(email).getGender();
+    }
+
+    public User getUser() {
+        return new UserDAO().getUserById(userId);
+    }
+
+    public Staff getSale() {
+        return new StaffDAO().getStaffById(createdBy);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getStatus() {
@@ -55,4 +143,39 @@ public class Order {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public int getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(int createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Staff getStaff() {
+        return new StaffDAO().getStaffById(createdBy);
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" + "id=" + id + ", userId=" + userId + ", fullname=" + fullname + ", address=" + address + ", phone=" + phone + ", status=" + status + ", isDeleted=" + isDeleted + ", createdAt=" + createdAt + ", createdBy=" + createdBy + ", totalCost=" + totalCost + ", notes=" + notes + ", user=" + user + '}';
+    }
+
 }
+

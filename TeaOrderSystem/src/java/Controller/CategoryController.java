@@ -1,7 +1,7 @@
-package controller;
+package Controller;
 
-import dao.CategoryDAO;
-import model.Category;
+import DAO.CategoryDAO;
+import Model.Category;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;

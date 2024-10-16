@@ -1,3 +1,6 @@
+package Controller;
+
+import DAO.OrderDAO;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -5,10 +8,10 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class OrdersController extends HttpServlet {
-    private DAOOrder daoOrder;
+    private OrderDAO daoOrder;
 
     public void init() {
-        daoOrder = new DAOOrder();
+        daoOrder = new OrderDAO();
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
