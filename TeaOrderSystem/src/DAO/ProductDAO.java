@@ -281,3 +281,160 @@ public class ProductDAO extends DBContext {
 
         return new ProductDetail();
     }
+    public int countTotalProducts() {
+        int totalProducts = 0;
+
+        String sql = "SELECT COUNT(*) AS TotalProducts FROM Product WHERE IsDeleted = 0";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql); ResultSet resultSet = statement.executeQuery()) {
+
+            if (resultSet.next()) {
+                totalProducts = resultSet.getInt("TotalProducts");
+            }
+        } catch (SQLException ex) {
+            System.out.println("countTotalProducts: " + ex.getMessage());
+        }
+
+        return totalProducts;
+    }
+
+    public List<Topping> getAllToppings(int productId) {
+        List<Topping> toppings = new ArrayList<>();
+        String query = "SELECT ID, ToppingName, Price, IsDeleted, CreatedDate, LastUpdated, Img, ProductID FROM Topping WHERE IsDeleted = 0 and ProductID = ?";
+
+        try (
+                PreparedStatement ps = connection.prepareStatement(query);) {
+            ps.setInt(1, productId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Topping topping = new Topping();
+                topping.setId(rs.getInt("ID"));
+                topping.setToppingName(rs.getString("ToppingName"));
+                topping.setPrice(rs.getDouble("Price"));
+                topping.setDeleted(rs.getBoolean("IsDeleted"));
+                topping.setCreatedDate(rs.getDate("CreatedDate").toLocalDate());
+                topping.setLastUpdated(rs.getDate("LastUpdated").toLocalDate());
+                topping.setImg(rs.getString("Img"));
+                topping.setProductId(rs.getInt("ProductID"));
+                toppings.add(topping);
+            }
+        } catch (SQLException e) {
+            System.out.println("getAllToppings: " + e.getMessage());
+        }
+        return toppings;
+    }
+
+    public List<ProductDetail> getProductDetailsByProductId(int productId) {
+        List<ProductDetail> productDetails = new ArrayList<>();
+
+        String sql = "SELECT "
+                + "pd.ID AS ProductDetailID, "
+                + "pd.ImageURL, "
+                + "pd.Size, "
+                + "pd.Stock, "
+                + "pd.price, "
+                + "pd.discount, "
+                + "pd.CreatedAt, "
+                + "pd.CreatedBy "
+                + "FROM ProductDetail pd "
+                + "WHERE pd.ProductID = ? AND pd.IsDeleted = 0";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, productId);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                ProductDetail productDetail = new ProductDetail();
+                productDetail.setProductDetailId(resultSet.getInt("ProductDetailID"));
+                productDetail.setImageURL(resultSet.getString("ImageURL"));
+                productDetail.setSize(resultSet.getString("Size"));
+                productDetail.setStock(resultSet.getInt("Stock"));
+                productDetail.setPrice(resultSet.getDouble("price"));
+                productDetail.setDiscount(resultSet.getInt("discount"));
+                productDetail.setCreatedAt(resultSet.getTimestamp("CreatedAt"));
+                productDetail.setCreatedBy(resultSet.getInt("CreatedBy"));
+
+                productDetails.add(productDetail);
+            }
+        } catch (SQLException ex) {
+            System.out.println("getProductDetailsByProductId: " + ex.getMessage());
+        }
+
+        return productDetails;
+    }
+
+    public Product getProductById(int productId) {
+        Product product = null;
+
+        String productSql = "SELECT "
+                + "p.ID AS ProductID, "
+                + "p.Name AS ProductName, "
+                + "c.Name AS CategoryName, "
+                + "p.CreatedAt AS ProductCreatedAt, "
+                + "p.description AS description, "
+                + "p.CreatedBy AS ProductCreatedBy, "
+                + "p.CategoryID "
+                + "FROM Product p "
+                + "INNER JOIN Category c ON p.CategoryID = c.ID "
+                + "WHERE p.ID = ? AND p.IsDeleted = 0";
+
+        try (PreparedStatement productStatement = connection.prepareStatement(productSql)) {
+            productStatement.setInt(1, productId);
+
+            try (ResultSet resultSet = productStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    product = new Product();
+                    product.setProductId(resultSet.getInt("ProductID"));
+                    product.setProductName(resultSet.getString("ProductName"));
+                    product.setCategoryId(resultSet.getInt("CategoryID"));
+                    product.setCategoryName(resultSet.getString("CategoryName"));
+                    product.setCreatedAt(resultSet.getTimestamp("ProductCreatedAt"));
+                    product.setCreatedBy(resultSet.getInt("ProductCreatedBy"));
+                    product.setDescription(resultSet.getString("description"));
+                    product.setProductDetail(getProductDetailByProductId(productId));
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("getProductById: " + ex.getMessage());
+        }
+
+        return product;
+    }
+
+    public Product getProductByIdDcm(int productId) {
+        Product product = null;
+
+        String productSql = "SELECT "
+                + "p.ID AS ProductID, "
+                + "p.Name AS ProductName, "
+                + "c.Name AS CategoryName, "
+                + "c.ID AS CategoryID, "
+                + "p.CreatedAt AS ProductCreatedAt, "
+                + "p.description AS description, "
+                + "p.CreatedBy AS ProductCreatedBy "
+                + "FROM Product p "
+                + "INNER JOIN Category c ON p.CategoryID = c.ID "
+                + "WHERE p.ID = ?";
+
+        try (PreparedStatement productStatement = connection.prepareStatement(productSql)) {
+            productStatement.setInt(1, productId);
+
+            try (ResultSet resultSet = productStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    product = new Product();
+                    product.setProductId(resultSet.getInt("ProductID"));
+                    product.setProductName(resultSet.getString("ProductName"));
+                    product.setCategoryId(resultSet.getInt("CategoryID"));
+                    product.setCategoryName(resultSet.getString("CategoryName"));
+                    product.setCreatedAt(resultSet.getTimestamp("ProductCreatedAt"));
+                    product.setCreatedBy(resultSet.getInt("ProductCreatedBy"));
+                    product.setDescription(resultSet.getString("description"));
+                    product.setProductDetail(getProductDetailByProductId(productId));
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("getProductById: " + ex.getMessage());
+        }
+
+        return product;
+    }
