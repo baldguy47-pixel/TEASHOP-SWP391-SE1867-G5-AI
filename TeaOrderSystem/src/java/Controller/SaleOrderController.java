@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author Legion
  */
-@WebServlet(name = "SaleOrderController", urlPatterns = {"/sale/sale-order"})
+@WebServlet(name    = "SaleOrderController", urlPatterns = {"/sale/sale-order"})
 public class SaleOrderController extends HttpServlet {
 
     /**
