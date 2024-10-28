@@ -1,4 +1,7 @@
-
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package DAO;
 
 import Model.Product;
@@ -844,6 +847,7 @@ public class ProductDAO extends DBContext {
         if (isDeleted != null) {
             query += "AND p.IsDeleted = ? ";
         }
+        
 
         query += "ORDER BY p.ID "
                 + "LIMIT ?  OFFSET ?";
@@ -980,3 +984,174 @@ public class ProductDAO extends DBContext {
 
         return success;
     }
+
+    public boolean updateProductDetailInventory(ProductDetail productDetail) {
+        boolean success = false;
+        String query = "UPDATE ProductDetail SET Stock = ?, hold = ?, importPrice = ? "
+                + "WHERE ID = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, productDetail.getStock());
+            statement.setInt(2, productDetail.getHold());
+            statement.setDouble(3, productDetail.getImportPrice());
+            statement.setInt(4, productDetail.getProductDetailId());
+
+            int rowsUpdated = statement.executeUpdate();
+            if (rowsUpdated > 0) {
+                success = true;
+            }
+        } catch (SQLException ex) {
+            System.out.println("updateProductDetailInventory: " + ex.getMessage());
+        }
+
+        return success;
+    }
+
+    public List<Product> homePage() {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT \n"
+                + "    p.*, \n"
+                + "    pd.*\n"
+                + "FROM \n"
+                + "    product p\n"
+                + "INNER JOIN (\n"
+                + "    SELECT \n"
+                + "        pd1.ProductID, \n"
+                + "        MIN(pd1.Price) AS MinPrice\n"
+                + "    FROM \n"
+                + "        productDetail pd1\n"
+                + "    WHERE \n"
+                + "        pd1.isDeleted = 0\n"
+                + "    GROUP BY \n"
+                + "        pd1.ProductID\n"
+                + ") AS MinPrices ON p.ID = MinPrices.ProductID\n"
+                + "INNER JOIN productDetail pd ON p.ID = pd.ProductID AND pd.Price = MinPrices.MinPrice\n"
+                + "    AND pd.ID = (SELECT MIN(pd2.ID) FROM productDetail pd2 WHERE pd2.ProductID = pd.ProductID AND pd2.Price = MinPrices.MinPrice)\n"
+                + "WHERE \n"
+                + "    p.isDeleted = 0\n"
+                + "ORDER BY \n"
+                + "    p.CreatedAt DESC LIMIT 12\n";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Product product = new Product();
+                ProductDetail productDetail = new ProductDetail();
+
+                product.setProductId(rs.getInt("ID"));
+                product.setProductName(rs.getString("Name"));
+                product.setDescription(rs.getString("description"));
+
+                productDetail.setPrice(rs.getDouble("price"));
+                productDetail.setImageURL(rs.getString("ImageURL"));
+                productDetail.setDiscount(rs.getInt("discount"));
+
+                product.setProductDetail(productDetail);
+
+                products.add(product);
+            }
+            return products;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return products;
+    }
+
+    public List<Product> listProductsPage(String name, String category, double minPrice, double maxPrice, int pageSize, int pageNumber, String arrangePrice, String arrangeName) {
+        String sql = "SELECT p.*, pd.*, c.*\n"
+                + "FROM Product p\n"
+                + "JOIN (\n"
+                + "    SELECT pd1.*\n"
+                + "    FROM ProductDetail pd1\n"
+                + "    JOIN (\n"
+                + "        SELECT ProductID, MIN(Price) AS MinPrice\n"
+                + "        FROM ProductDetail\n"
+                + "        GROUP BY ProductID\n"
+                + "    ) pd2 ON pd1.ProductID = pd2.ProductID AND pd1.Price = pd2.MinPrice\n"
+                + "    WHERE pd1.ID = (SELECT MIN(ID)\n"
+                + "                   FROM ProductDetail\n"
+                + "                   WHERE ProductID = pd1.ProductID AND Price = pd2.MinPrice)\n"
+                + ") pd ON p.ID = pd.ProductID\n"
+                + "JOIN Category c ON p.CategoryID = c.ID And c.IsDeleted = 0  \n"
+                + "WHERE pd.Price BETWEEN " + minPrice + " AND " + maxPrice + "\n"
+                + "  AND p.name like '%" + name + "%' and p.isDeleted = 0 ";
+
+        if (category != null && category.length() != 0) {
+            sql += "  AND c.ID in (" + category + ")";
+        }
+
+        sql += "ORDER BY pd.price " + arrangePrice + ", p.name " + arrangeName + "  \n"
+                + "LIMIT " + pageSize + " OFFSET " + ((pageNumber - 1) * pageSize) + ";";
+
+        List<Product> products = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Product product = new Product();
+                ProductDetail productDetail = new ProductDetail();
+
+                product.setProductId(rs.getInt("ID"));
+                product.setProductName(rs.getString("Name"));
+
+                productDetail.setPrice(rs.getDouble("price"));
+                productDetail.setImageURL(rs.getString("ImageURL"));
+                productDetail.setDiscount(rs.getInt("discount"));
+
+                product.setProductDetail(productDetail);
+
+                products.add(product);
+            }
+            return products;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return products;
+    }
+
+    public int countFilter(String name, String category, double minPrice, double maxPrice) {
+        String sql = "SELECT COUNT(*)\n"
+                + "FROM Product p\n"
+                + "JOIN (\n"
+                + "    SELECT pd1.*\n"
+                + "    FROM ProductDetail pd1\n"
+                + "    JOIN (\n"
+                + "        -- Lấy giá nhỏ nhất của từng ProductID\n"
+                + "        SELECT ProductID, MIN(Price) AS MinPrice\n"
+                + "        FROM ProductDetail\n"
+                + "        GROUP BY ProductID\n"
+                + "    ) pd2 ON pd1.ProductID = pd2.ProductID AND pd1.Price = pd2.MinPrice \n "
+                + "WHERE pd1.ID = (\n"
+                + "    SELECT MIN(ID)\n"
+                + "    FROM ProductDetail\n"
+                + "    WHERE ProductID = pd1.ProductID AND Price = pd2.MinPrice\n"
+                + ")"
+                + ") pd ON p.ID = pd.ProductID\n"
+                + "JOIN Category c ON p.CategoryID = c.ID And c.IsDeleted = 0  \n"
+                + "WHERE pd.Price BETWEEN " + minPrice + " AND " + maxPrice + "\n  "
+                + "  AND p.name like '%" + name + "%'  ";
+
+        if (category != null && category.length() != 0) {
+            sql += "  AND c.ID in (" + category + ")";
+        }
+        int products = 0;
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                products = rs.getInt(1);
+            }
+            return products;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return products;
+    }
+
+
+
+}
