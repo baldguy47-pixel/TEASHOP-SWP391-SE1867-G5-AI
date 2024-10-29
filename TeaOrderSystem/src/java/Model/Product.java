@@ -15,6 +15,7 @@ public class Product {
     private Boolean isDeleted;
     private int categoryId;
     private List<ProductDetail> listProductDetail;
+    private String baseImageURL;
     // Getters and setters
     public int getProductId() {
         return productId;
@@ -100,10 +101,15 @@ public class Product {
     public void setCategoryId(int categoryId) {
         this.categoryId = categoryId;
     }
-    
-    public String getThumb() {
-        return new ProductDAO().getProductDetailByProductId(productId).getImageURL();
+
+    public String getBaseImageURL() {
+        return baseImageURL;
     }
+
+    public void setBaseImageURL(String baseImageURL) {
+        this.baseImageURL = baseImageURL;
+    }
+    
 
     public ProductDetail getDetail() {
         return new ProductDAO().getProductDetailByProductId(productId);
