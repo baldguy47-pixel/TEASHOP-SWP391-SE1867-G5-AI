@@ -17,7 +17,11 @@ import java.sql.Statement;
 
 /**
  *
+<<<<<<< HEAD
  * @author Legion
+=======
+ * @author Link
+>>>>>>> linhkhanh
  */
 public class ProductDAO extends DBContext {
 
@@ -847,6 +851,10 @@ public class ProductDAO extends DBContext {
         if (isDeleted != null) {
             query += "AND p.IsDeleted = ? ";
         }
+<<<<<<< HEAD
+=======
+        
+>>>>>>> linhkhanh
 
         query += "ORDER BY p.ID "
                 + "LIMIT ?  OFFSET ?";
@@ -1015,6 +1023,7 @@ public class ProductDAO extends DBContext {
                 + "    product p\n"
                 + "INNER JOIN (\n"
                 + "    SELECT \n"
+<<<<<<< HEAD
                 + "        ProductID, \n"
                 + "        MIN(Price) AS MinPrice\n"
                 + "    FROM \n"
@@ -1025,10 +1034,27 @@ public class ProductDAO extends DBContext {
                 + "        ProductID\n"
                 + ") AS MinPrices ON p.ID = MinPrices.ProductID\n"
                 + "INNER JOIN productDetail pd ON p.ID = pd.ProductID AND pd.Price = MinPrices.MinPrice\n"
+=======
+                + "        pd1.ProductID, \n"
+                + "        MIN(pd1.Price) AS MinPrice\n"
+                + "    FROM \n"
+                + "        productDetail pd1\n"
+                + "    WHERE \n"
+                + "        pd1.isDeleted = 0\n"
+                + "    GROUP BY \n"
+                + "        pd1.ProductID\n"
+                + ") AS MinPrices ON p.ID = MinPrices.ProductID\n"
+                + "INNER JOIN productDetail pd ON p.ID = pd.ProductID AND pd.Price = MinPrices.MinPrice\n"
+                + "    AND pd.ID = (SELECT MIN(pd2.ID) FROM productDetail pd2 WHERE pd2.ProductID = pd.ProductID AND pd2.Price = MinPrices.MinPrice)\n"
+>>>>>>> linhkhanh
                 + "WHERE \n"
                 + "    p.isDeleted = 0\n"
                 + "ORDER BY \n"
                 + "    p.CreatedAt DESC LIMIT 12\n";
+<<<<<<< HEAD
+=======
+
+>>>>>>> linhkhanh
         try {
             PreparedStatement ps = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
             ResultSet rs = ps.executeQuery();
@@ -1067,9 +1093,18 @@ public class ProductDAO extends DBContext {
                 + "        FROM ProductDetail\n"
                 + "        GROUP BY ProductID\n"
                 + "    ) pd2 ON pd1.ProductID = pd2.ProductID AND pd1.Price = pd2.MinPrice\n"
+<<<<<<< HEAD
                 + ") pd ON p.ID = pd.ProductID\n"
                 + "JOIN Category c ON p.CategoryID = c.ID\n"
                 + "WHERE pd.Price BETWEEN " + minPrice + " AND " + maxPrice + "\n  "
+=======
+                + "    WHERE pd1.ID = (SELECT MIN(ID)\n"
+                + "                   FROM ProductDetail\n"
+                + "                   WHERE ProductID = pd1.ProductID AND Price = pd2.MinPrice)\n"
+                + ") pd ON p.ID = pd.ProductID\n"
+                + "JOIN Category c ON p.CategoryID = c.ID And c.IsDeleted = 0  \n"
+                + "WHERE pd.Price BETWEEN " + minPrice + " AND " + maxPrice + "\n"
+>>>>>>> linhkhanh
                 + "  AND p.name like '%" + name + "%' and p.isDeleted = 0 ";
 
         if (category != null && category.length() != 0) {
@@ -1117,11 +1152,24 @@ public class ProductDAO extends DBContext {
                 + "        SELECT ProductID, MIN(Price) AS MinPrice\n"
                 + "        FROM ProductDetail\n"
                 + "        GROUP BY ProductID\n"
+<<<<<<< HEAD
                 + "    ) pd2 ON pd1.ProductID = pd2.ProductID AND pd1.Price = pd2.MinPrice\n"
                 + ") pd ON p.ID = pd.ProductID\n"
                 + "JOIN Category c ON p.CategoryID = c.ID\n"
                 + "WHERE pd.Price BETWEEN " + minPrice + " AND " + maxPrice + "\n  "
                 + "  AND p.name like '%" + name + "%' and p.isDeleted = 0 ";
+=======
+                + "    ) pd2 ON pd1.ProductID = pd2.ProductID AND pd1.Price = pd2.MinPrice \n "
+                + "WHERE pd1.ID = (\n"
+                + "    SELECT MIN(ID)\n"
+                + "    FROM ProductDetail\n"
+                + "    WHERE ProductID = pd1.ProductID AND Price = pd2.MinPrice\n"
+                + ")"
+                + ") pd ON p.ID = pd.ProductID\n"
+                + "JOIN Category c ON p.CategoryID = c.ID And c.IsDeleted = 0  \n"
+                + "WHERE pd.Price BETWEEN " + minPrice + " AND " + maxPrice + "\n  "
+                + "  AND p.name like '%" + name + "%'  ";
+>>>>>>> linhkhanh
 
         if (category != null && category.length() != 0) {
             sql += "  AND c.ID in (" + category + ")";
@@ -1141,4 +1189,10 @@ public class ProductDAO extends DBContext {
         return products;
     }
 
+<<<<<<< HEAD
 }
+=======
+
+
+}
+>>>>>>> linhkhanh
