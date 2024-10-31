@@ -1,7 +1,10 @@
+<<<<<<< HEAD
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
+=======
+>>>>>>> linhkhanh
 package Model;
 
 import DAO.ProductDAO;
@@ -19,6 +22,10 @@ public class Product {
     private Boolean isDeleted;
     private int categoryId;
     private List<ProductDetail> listProductDetail;
+<<<<<<< HEAD
+=======
+    private String baseImageURL;
+>>>>>>> linhkhanh
     // Getters and setters
     public int getProductId() {
         return productId;
@@ -104,13 +111,30 @@ public class Product {
     public void setCategoryId(int categoryId) {
         this.categoryId = categoryId;
     }
+<<<<<<< HEAD
     
     public String getThumb() {
         return new ProductDAO().getProductDetailByProductId(productId).getImageURL();
     }
 
+=======
+
+    public String getBaseImageURL() {
+        return baseImageURL;
+    }
+
+    public void setBaseImageURL(String baseImageURL) {
+        this.baseImageURL = baseImageURL;
+    }
+    
+
+>>>>>>> linhkhanh
     public ProductDetail getDetail() {
         return new ProductDAO().getProductDetailByProductId(productId);
     }
   
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> linhkhanh
