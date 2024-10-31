@@ -5,6 +5,7 @@
 package controller;
 
 import DAO.CategoryDAO;
+import DAO.ProductDAO;
 import Model.Category;
 import Model.Staff;
 import java.io.IOException;
@@ -45,8 +46,8 @@ public class AdminCategoryController extends HttpServlet {
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>Servlet AdminCategoryController at " + request.getContextPath() + "</h1>");
-            out.println("</body>") ;
-            out.println("</html>") ;
+            out.println("</body>");
+            out.println("</html>");
         }
     }
 
@@ -129,11 +130,14 @@ public class AdminCategoryController extends HttpServlet {
         int createdBy = staff.getId();
 
         Category newCategory = new Category();
-        newCategory.setCategoryName(name);
+        newCategory.setCategoryName(name.trim());
         newCategory.setIsDeleted(isDeleted);
         newCategory.setCreatedBy(createdBy);
+        boolean success = false;
+        if (!categoryDAO.checkExistedCategoryName(name.trim())) {
+            success = categoryDAO.addCategory(newCategory);
+        }
 
-        boolean success = categoryDAO.addCategory(newCategory);
         if (success) {
             // Redirect to staff list page after successful addition
             response.sendRedirect("category?success");
@@ -152,9 +156,18 @@ public class AdminCategoryController extends HttpServlet {
         updatedCategory.setID(id);
         updatedCategory.setCategoryName(name);
         updatedCategory.setIsDeleted(isDeleted);
+        boolean success = false;
 
-        boolean success = categoryDAO.updateCategory(updatedCategory);
-        
+        if (!categoryDAO.checkExistedCategoryName(name.trim(), id)) {
+            success = categoryDAO.updateCategory(updatedCategory);
+        }
+
+        // Chỉ cập nhật trạng thái sản phẩm nếu có sản phẩm trong danh mục
+        if (success && new ProductDAO().hasProductsInCategory(id)) {
+            success = new ProductDAO().updateProductStatusByCategoryID(id, isDeleted);
+        }
+
+        System.out.println(success);
         if (success) {
             // Redirect to staff list page after successful addition
             response.sendRedirect("category?success");

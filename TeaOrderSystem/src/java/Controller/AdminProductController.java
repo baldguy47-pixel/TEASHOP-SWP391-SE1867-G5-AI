@@ -31,22 +31,17 @@ public class AdminProductController extends HttpServlet {
         String pageParam = request.getParameter("page");
         String searchQuery = request.getParameter("searchQuery");
         String categoryId = request.getParameter("categoryId");
-        String minPriceParam = request.getParameter("minPrice");
-        String maxPriceParam = request.getParameter("maxPrice");
-        String size = request.getParameter("size");
 
         int pageNumber = pageParam == null ? 1 : Integer.parseInt(pageParam);
         int pageSize = 10;
 
-        Double minPrice = minPriceParam == null || minPriceParam.isEmpty() ? null : Double.parseDouble(minPriceParam);
-        Double maxPrice = maxPriceParam == null || maxPriceParam.isEmpty() ? null : Double.parseDouble(maxPriceParam);
 
-        List<Product> products = new ProductDAO().getProductsByPage2(pageNumber, pageSize, searchQuery, categoryId, minPrice, maxPrice, size);
-        int total = new ProductDAO().countTotalProducts(searchQuery, categoryId, minPrice, maxPrice, size);
+        List<Product> products = new ProductDAO().getProductsByPage2(pageNumber, pageSize, searchQuery, categoryId);
+        int total = new ProductDAO().countTotalProducts(searchQuery, categoryId);
+        System.out.println(total);
 
         int endPage = total % pageSize == 0 ? total / pageSize : total / pageSize + 1;
         List<Category> categories = new CategoryDAO().getCategories();
-        List<String> sizes = new ProductDAO().getAvailableSizes();
 
         // Forward the filtered product list and pagination parameters to the JSP
         request.setAttribute("productList", products);
@@ -54,12 +49,8 @@ public class AdminProductController extends HttpServlet {
         request.setAttribute("pageSize", pageSize);
         request.setAttribute("categories", categories);
         request.setAttribute("totalPages", endPage);
-        request.setAttribute("sizes", sizes);
         request.setAttribute("searchQuery", searchQuery);
         request.setAttribute("categoryId", categoryId);
-        request.setAttribute("minPrice", minPrice);
-        request.setAttribute("maxPrice", maxPrice);
-        request.setAttribute("selectedSize", size);
         request.setAttribute("categories", new CategoryDAO().getCategories());
 
         request.getRequestDispatcher("../admin-product.jsp").forward(request, response);
@@ -90,8 +81,6 @@ public class AdminProductController extends HttpServlet {
         int categoryId = Integer.parseInt(request.getParameter("categoryId"));
         String description = request.getParameter("description");
         String imageUrl = request.getParameter("imageUrl");
-        double price = Double.parseDouble(request.getParameter("price"));
-        int quantity = Integer.parseInt(request.getParameter("quantity"));
 
         // Create a new Product object
         Product newProduct = new Product();
@@ -99,25 +88,15 @@ public class AdminProductController extends HttpServlet {
         newProduct.setCategoryId(categoryId);
         newProduct.setDescription(description);
         newProduct.setCreatedBy(1);
+        newProduct.setBaseImageURL(imageUrl);
         newProduct.setIsDeleted(Boolean.FALSE);
 
-        // Add the product to the database
-        int productId = productDAO.addProduct(newProduct);
-
-        ProductDetail productDetail = new ProductDetail();
-        productDetail.setProductId(productId);
-        productDetail.setImageURL(imageUrl);
-        productDetail.setPrice(price);
-        productDetail.setStock(quantity);
-
-        String[] sizes = request.getParameterValues("size");
-
-        if (sizes != null) {
-            for (String size : sizes) {
-                productDetail.setSize(size);
-                new ProductDAO().addProductDetail(productDetail);
-            }
+        int productId = -1;
+        if(!productDAO.checkExistedProductName(productName.trim())) {
+            /// Add the product to the database
+            productId = productDAO.addProduct(newProduct);
         }
+        
 
         if (productId != -1) {
             // Redirect to product list page after successful addition
@@ -135,9 +114,6 @@ public class AdminProductController extends HttpServlet {
         String description = request.getParameter("description");
         boolean isDeleted = Boolean.parseBoolean(request.getParameter("isDeleted"));
         String imageUrl = request.getParameter("imageUrl");
-        double price = Double.parseDouble(request.getParameter("price"));
-        int quantity = Integer.parseInt(request.getParameter("quantity"));
-        String size = request.getParameter("size");
         // Create a Product object with the updated data
         Product product = new Product();
         product.setProductId(productId);
@@ -145,16 +121,15 @@ public class AdminProductController extends HttpServlet {
         product.setCategoryName(categoryName);
         product.setDescription(description);
         product.setIsDeleted(isDeleted);
-
-        ProductDetail productDetail = new ProductDAO().getProductDetailByProductId(productId);
-        productDetail.setImageURL(imageUrl);
-        productDetail.setPrice(price);
-        productDetail.setSize(size);
-        productDetail.setStock(quantity);
-        new ProductDAO().updateProductDetail(productDetail);
-
-        // Update the product in the database
-        boolean success = productDAO.updateProduct(product);
+        product.setBaseImageURL(imageUrl);
+         boolean success = false;
+         
+        if(!productDAO.checkExistedProductName(productName.trim())) {
+            // Update the product in the database
+            success= productDAO.updateProduct(product);
+        }
+        
+        
 
         if (success) {
             // Redirect to product list page after successful update
