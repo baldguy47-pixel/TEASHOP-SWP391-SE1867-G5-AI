@@ -7,6 +7,7 @@ package controller;
 import DAO.UserDAO;
 import Model.User;
 import Utils.EmailService;
+import Utils.PasswordUtil;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -88,7 +89,7 @@ public class RegisterControl extends HttpServlet {
             // Set register info session
             User user = new User();
             user.setEmail(email);
-            user.setPassword(password);
+            user.setPassword(PasswordUtil.hashPasswordMD5(password));
             user.setFullname(fullName);
             user.setGender("Female");
             user.setAddress("");
@@ -100,7 +101,8 @@ public class RegisterControl extends HttpServlet {
 
             // Registration successful
             request.setAttribute("errorMessage", "Đã gửi thư xác minh tới email của bạn!");
-            request.getRequestDispatcher("Register.jsp").forward(request, response);
+            request.setAttribute("email", email);
+            request.getRequestDispatcher("Login.jsp").forward(request, response);
         }
 
     }
@@ -147,7 +149,7 @@ public class RegisterControl extends HttpServlet {
     private boolean isValidFullName(String fullName) {
         // Implement your validation logic for full name format
         // For example, you can check if it contains only letters
-        return fullName.trim().length() > 1;
+        return fullName.trim().length() > 0;
     }
 
     private boolean isValidPassword(String password) {
