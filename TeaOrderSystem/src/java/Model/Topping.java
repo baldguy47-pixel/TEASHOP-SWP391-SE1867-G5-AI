@@ -6,7 +6,7 @@ package Model;
 
 /**
  *
- * @author Linh
+ * @author Legion
  */
 import java.time.LocalDate;
 

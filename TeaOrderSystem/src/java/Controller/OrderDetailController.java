@@ -1,11 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
-import DAO.UserDAO;
-import Model.User;
+import DAO.OrderDAO;
+import DAO.PostDAO;
+import DAO.ProductDAO;
+import Model.Category;
+import Model.Order;
+import Model.Product;
+import Model.ProductDetail;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -13,13 +14,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  *
- * @author Anh Phuong Le
+ * @author Linkk
  */
-@WebServlet(name = "VerifyControl", urlPatterns = {"/verify"})
-public class VerifyControl extends HttpServlet {
+@WebServlet(name = "OrderDetailController", urlPatterns = {"/customer/order-detail"})
+public class OrderDetailController extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -38,10 +40,10 @@ public class VerifyControl extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet VerifyControl</title>");
+            out.println("<title>Servlet OrderDetailController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet VerifyControl at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet OrderDetailController at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -59,39 +61,21 @@ public class VerifyControl extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        int orderId = Integer.parseInt(request.getParameter("orderId"));
 
-        String email = (String) request.getParameter("email");
-        String otp = (String) request.getParameter("otp");
+        OrderDAO orderDAO = new OrderDAO();
+        ProductDAO productDAO = new ProductDAO();
 
-        String checkOtp = (String) request.getSession().getAttribute("verify_otp_" + email);
-
-        if (otp.equals(checkOtp)) {
-
-            User user = (User) request.getSession().getAttribute("verify_" + email);
-
-            boolean registrationSuccessful = new UserDAO().registerUser(user);
-            
-            if (registrationSuccessful) {
-                // Registration successful
-                request.setAttribute("errorMessage", "Register success");
-                request.getRequestDispatcher("Login.jsp").forward(request, response);
-
-            } else {
-
-                // Registration fail
-                request.setAttribute("errorMessage", "Register fail");
-                request.getRequestDispatcher("Register.jsp").forward(request, response);
-
-            }
-
-        } else {
-
-            // Wrong otp
-            request.setAttribute("errorMessage", "Wrong OTP");
-            request.getRequestDispatcher("Register.jsp").forward(request, response);
-
-        }
-
+        Order order = orderDAO.getOrderById(orderId);
+        List<ProductDetail> orderedProducts = orderDAO.getOrderedProductsByOrderId(orderId);
+        List<Product> latestProducts = productDAO.getThreeLastestProducts();
+        List<Category> categories = new PostDAO().getUniqueCategories();
+        
+        request.setAttribute("categories", categories);
+        request.setAttribute("order", order);
+        request.setAttribute("orderedProducts", orderedProducts);
+        request.setAttribute("latestProducts", latestProducts);
+        request.getRequestDispatcher("/order-detail.jsp").forward(request, response);
     }
 
     /**
@@ -105,7 +89,7 @@ public class VerifyControl extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response)  ;
+        processRequest(request, response);
     }
 
     /**
@@ -117,6 +101,5 @@ public class VerifyControl extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
-
 
 }
