@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package DAO;
 
 import Model.Topping;
@@ -8,7 +12,7 @@ import java.util.List;
 
 /**
  *
- * @author Linhh
+ * @author Legion
  */
 public class ToppingDAO extends DBContext {
 
@@ -43,7 +47,7 @@ public class ToppingDAO extends DBContext {
 
         // Establish the database connection
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery.toString())) {
-            
+
             // Set the values for the placeholders in the query
             for (int i = 0; i < toppingIDs.length; i++) {
                 preparedStatement.setString(i + 1, toppingIDs[i].trim());
@@ -53,7 +57,7 @@ public class ToppingDAO extends DBContext {
             ResultSet resultSet = preparedStatement.executeQuery();
             // Process the results
             while (resultSet.next()) {
-                
+
                 Topping topping = new Topping();
                 topping.setId(resultSet.getInt("id"));
                 topping.setToppingName(resultSet.getString("toppingName"));
@@ -63,26 +67,25 @@ public class ToppingDAO extends DBContext {
                 topping.setLastUpdated(resultSet.getDate("lastUpdated").toLocalDate());
                 topping.setImg(resultSet.getString("img"));
                 topping.setProductId(resultSet.getInt("productId"));
-                
+
                 // Add the topping to the list
                 toppingsList.add(topping);
             }
         } catch (SQLException e) {
             System.out.println("getToppingsByList: " + e.getMessage());
         }
-        
 
         // Return the list of toppings
         return toppingsList;
     }
-    
-        public List<Topping> getAllToppingsWithDeleted(){
+
+    public List<Topping> getAllToppingsWithDeleted() {
         String sql = "select * from Topping";
         List<Topping> toppings = new ArrayList<>();
         try {
             PreparedStatement ps = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
             ResultSet rs = ps.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 int id = rs.getInt("ID");
                 String name = rs.getString("ToppingName");
                 double price = rs.getDouble("Price");
@@ -96,8 +99,8 @@ public class ToppingDAO extends DBContext {
         }
         return toppings;
     }
-    
-    public void updateTopping(Topping topping){
+
+    public void updateTopping(Topping topping) {
         String sql = "UPDATE Topping "
                 + "SET img=?, "
                 + "ToppingName=?, "
@@ -116,8 +119,8 @@ public class ToppingDAO extends DBContext {
         } catch (Exception e) {
         }
     }
-    
-    public void addTopping(Topping topping){
+
+    public void addTopping(Topping topping) {
         String sql = "Insert into Topping (img, ToppingName, Price, isDeleted) "
                 + "Values (?,?,?,?)";
         try {
@@ -129,6 +132,32 @@ public class ToppingDAO extends DBContext {
             ps.executeUpdate();
         } catch (Exception e) {
         }
+    }
+
+    public boolean isDuplicate(String toppingName, int toppingId) {
+        String sql = "SELECT * FROM Topping WHERE ToppingName = ?";
+        if (toppingId > 0) {
+            sql += " AND ID <> ?";
+        }
+        boolean isDuplicate = false;
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, toppingName);
+            if (toppingId > 0) {
+                ps.setInt(2, toppingId);
+            }
+
+            ResultSet rs = ps.executeQuery();
+            // Check if the result set has any records, which means a duplicate exists
+            if (rs.next()) {
+                isDuplicate = true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return isDuplicate;
     }
 
 }

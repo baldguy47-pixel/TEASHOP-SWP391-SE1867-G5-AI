@@ -4,8 +4,13 @@
  */
 package controller;
 
-import DAO.UserDAO;
-import Model.User;
+import DAO.OrderDAO;
+import DAO.PostDAO;
+import DAO.ProductDAO;
+import Model.Category;
+import Model.Order;
+import Model.Product;
+import Model.Staff;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -13,13 +18,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  *
- * @author Anh Phuong Le
+ * @author Legion
  */
-@WebServlet(name = "VerifyControl", urlPatterns = {"/verify"})
-public class VerifyControl extends HttpServlet {
+@WebServlet(name    = "SaleOrderController", urlPatterns = {"/sale/sale-order"})
+public class SaleOrderController extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -38,10 +44,10 @@ public class VerifyControl extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet VerifyControl</title>");
+            out.println("<title>Servlet SaleOrderController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet VerifyControl at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet SaleOrderController at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -59,39 +65,45 @@ public class VerifyControl extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        OrderDAO orderDAO = new OrderDAO();
+        orderDAO.autoCanceled();
 
-        String email = (String) request.getParameter("email");
-        String otp = (String) request.getParameter("otp");
+        String startDate = request.getParameter("startDate");
+        String id = request.getParameter("id");
+        String customerName = request.getParameter("customerName");
+        String endDate = request.getParameter("endDate");
+        String salesperson = request.getParameter("salesperson");
+        String orderStatus = request.getParameter("orderStatus");
 
-        String checkOtp = (String) request.getSession().getAttribute("verify_otp_" + email);
+        int currentPage = 1;
+        int ordersPerPage = 10;
 
-        if (otp.equals(checkOtp)) {
-
-            User user = (User) request.getSession().getAttribute("verify_" + email);
-
-            boolean registrationSuccessful = new UserDAO().registerUser(user);
-            
-            if (registrationSuccessful) {
-                // Registration successful
-                request.setAttribute("errorMessage", "Register success");
-                request.getRequestDispatcher("Login.jsp").forward(request, response);
-
-            } else {
-
-                // Registration fail
-                request.setAttribute("errorMessage", "Register fail");
-                request.getRequestDispatcher("Register.jsp").forward(request, response);
-
-            }
-
-        } else {
-
-            // Wrong otp
-            request.setAttribute("errorMessage", "Wrong OTP");
-            request.getRequestDispatcher("Register.jsp").forward(request, response);
-
+        if (request.getParameter("page") != null) {
+            currentPage = Integer.parseInt(request.getParameter("page"));
         }
+        
+        if(startDate == null || startDate.isEmpty()) {
+            startDate = "1990-01-01";
+        }
+        
+        if(endDate == null || endDate.isEmpty()) {
+            endDate = "9999-01-01";
+        }
+        
+        Staff staff = (Staff) request.getSession().getAttribute("staff");
+        
+        List<Order> orders = orderDAO.getOrdersByPage(currentPage, ordersPerPage, startDate, endDate, salesperson, orderStatus, staff, id, customerName);
+        List<Category> categories = new PostDAO().getUniqueCategories();
+        int totalOrders = orderDAO.getTotalOrderCount(startDate, endDate, salesperson, orderStatus, staff, id, customerName);
+        int totalPages = (int) Math.ceil((double) totalOrders / ordersPerPage);
+        
+        request.setAttribute("orders", orders);
+        request.setAttribute("categories", categories);
+        request.setAttribute("totalOrders", totalOrders);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentPage", currentPage);
 
+        request.getRequestDispatcher("/sale-list-order.jsp").forward(request, response);
     }
 
     /**
@@ -105,7 +117,7 @@ public class VerifyControl extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response)  ;
+        processRequest(request, response);
     }
 
     /**
@@ -117,6 +129,5 @@ public class VerifyControl extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
-
 
 }
