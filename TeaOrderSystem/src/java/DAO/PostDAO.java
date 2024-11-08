@@ -179,7 +179,7 @@ public class PostDAO extends DBContext {
     }
 
     public boolean createPost(String title, String content, String category, int createdBy, String imgURL) {
-        String query = "INSERT INTO Post (Title, Content, categoryid, IsDeleted, CreatedAt, CreatedBy, imgURL) VALUES (?, ?, ?, 0, GETDATE(), ?, ?)";
+        String query = "INSERT INTO Post (Title, Content, categoryid, IsDeleted, CreatedAt, CreatedBy, imgURL) VALUES (?, ?, ?, 0, NOW(), ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(query);) {
             stmt.setString(1, title);
             stmt.setString(2, content);
@@ -233,6 +233,32 @@ public class PostDAO extends DBContext {
         return post;
     }
 
+    
+    public boolean isExistedPostByTitle(String title, int ID) {
+        Post post = new Post();
+        // SQL query to retrieve post by ID
+        String query = "SELECT po.ID as PostID, CategoryId, Title, Content, po.IsDeleted, po.CreatedAt, po.CreatedBy, po.imgURL, u.Fullname as AuthorName "
+                + "FROM Post po "
+                + "JOIN User u ON po.CreatedBy = u.ID "
+                + "WHERE po.Title = ? ";
+        if(ID != 0){
+            query += " AND po.ID <> ? ";
+        }
+        try (PreparedStatement stmt = connection.prepareStatement(query);) {
+            stmt.setString(1, title);
+            if(ID != 0){
+                stmt.setInt(2, ID);
+            }
+            // Execute the query
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+    
     public boolean updatePost(int postId, String title, String content, int categoryId, String imgURL) {
         // SQL query to update the post
         String query = "UPDATE Post SET Title = ?, Content = ?, CategoryId = ?, imgURL = ? WHERE ID = ?";
