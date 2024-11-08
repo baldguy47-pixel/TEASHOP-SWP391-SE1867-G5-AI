@@ -123,7 +123,12 @@ public class ShipperController extends HttpServlet {
         int orderId = Integer.parseInt(request.getParameter("orderId"));
 
         OrderDAO orderDAO = new OrderDAO();
-        orderDAO.updateShipperOrder(staff.getId(), "Delivering", orderId);
+        if(orderDAO.getOrderByOrderID(orderId).getStatus().equals("Pay before")){
+            orderDAO.updateShipperOrder(staff.getId(), "Delivering - Pay before", orderId);
+        }
+        else{
+            orderDAO.updateShipperOrder(staff.getId(), "Delivering", orderId);
+        }
 
         response.sendRedirect("shipper?page=view-all-order&isSuccess=success"); // Chuyển đến trang các đơn hàng đã nhận
     }
